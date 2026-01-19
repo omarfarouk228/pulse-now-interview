@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pulsenow_flutter/themes/app_theme.dart';
 import '../providers/market_data_provider.dart';
 import '../models/market_data_model.dart';
+import '../router/app_router.dart';
 import '../utils/constants.dart';
-import 'market_detail_screen.dart';
 
 class MarketDataScreen extends StatefulWidget {
   const MarketDataScreen({super.key});
@@ -24,29 +25,36 @@ class _MarketDataScreenState extends State<MarketDataScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MarketDataProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading && !provider.hasData) {
-          return const _LoadingView();
-        }
+    return Column(
+      children: [
+        _SortIndicator(),
+        Expanded(
+          child: Consumer<MarketDataProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading && !provider.hasData) {
+                return const _LoadingView();
+              }
 
-        if (provider.hasError && !provider.hasData) {
-          return _ErrorView(
-            error: provider.error!,
-            onRetry: () => provider.loadMarketData(),
-          );
-        }
+              if (provider.hasError && !provider.hasData) {
+                return _ErrorView(
+                  error: provider.error!,
+                  onRetry: () => provider.loadMarketData(),
+                );
+              }
 
-        if (!provider.hasData) {
-          return _EmptyView(onRefresh: () => provider.loadMarketData());
-        }
+              if (!provider.hasData) {
+                return _EmptyView(onRefresh: () => provider.loadMarketData());
+              }
 
-        return _MarketDataListView(
-          marketData: provider.marketData,
-          isLoading: provider.isLoading,
-          onRefresh: () => provider.refreshMarketData(),
-        );
-      },
+              return _MarketDataListView(
+                marketData: provider.marketData,
+                isLoading: provider.isLoading,
+                onRefresh: () => provider.refreshMarketData(),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -183,11 +191,7 @@ class _MarketDataListView extends StatelessWidget {
   }
 
   void _navigateToDetail(BuildContext context, MarketData data) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => MarketDetailScreen(marketData: data),
-      ),
-    );
+    AppRouter.goToMarketDetail(data);
   }
 }
 
@@ -303,16 +307,84 @@ class _CryptoIcon extends StatelessWidget {
   Color _getColorForSymbol(String symbol) {
     // Generate a consistent color based on the symbol
     final hash = symbol.hashCode;
-    final colors = [
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
-      Colors.indigo,
-      Colors.pink,
-      Colors.cyan,
-      Colors.amber,
-    ];
+    final colors = AppTheme.symbolColors;
     return colors[hash.abs() % colors.length];
+  }
+}
+
+class _SortIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MarketDataProvider>(
+      builder: (context, provider, child) {
+        if (provider.sortOption == MarketDataSortOption.symbol &&
+            provider.searchQuery.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Row(
+            children: [
+              if (provider.searchQuery.isNotEmpty) ...[
+                const Icon(Icons.search, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '"${provider.searchQuery}"',
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '(${provider.marketData.length} results)',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+              if (provider.searchQuery.isNotEmpty &&
+                  provider.sortOption != MarketDataSortOption.symbol)
+                const Text(' | '),
+              if (provider.sortOption != MarketDataSortOption.symbol) ...[
+                const Icon(Icons.sort, size: 16),
+                const SizedBox(width: 4),
+                Text(_getSortLabel(provider.sortOption)),
+              ],
+              const Spacer(),
+              if (provider.searchQuery.isNotEmpty ||
+                  provider.sortOption != MarketDataSortOption.symbol)
+                GestureDetector(
+                  onTap: () {
+                    provider.clearSearch();
+                    provider.setSortOption(MarketDataSortOption.symbol);
+                  },
+                  child: const Text(
+                    'Clear',
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getSortLabel(MarketDataSortOption option) {
+    switch (option) {
+      case MarketDataSortOption.symbol:
+        return 'Symbol';
+      case MarketDataSortOption.priceAsc:
+        return 'Price (Low)';
+      case MarketDataSortOption.priceDesc:
+        return 'Price (High)';
+      case MarketDataSortOption.changeAsc:
+        return 'Change (Worst)';
+      case MarketDataSortOption.changeDesc:
+        return 'Change (Best)';
+      case MarketDataSortOption.volumeDesc:
+        return 'Volume';
+    }
   }
 }

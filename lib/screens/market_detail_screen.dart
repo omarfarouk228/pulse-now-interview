@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pulsenow_flutter/themes/app_theme.dart';
 import '../models/market_data_model.dart';
 import '../providers/market_data_provider.dart';
 import '../services/api_service.dart';
@@ -491,16 +492,7 @@ class _CryptoLargeIcon extends StatelessWidget {
 
   Color _getColorForSymbol(String symbol) {
     final hash = symbol.hashCode;
-    final colors = [
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
-      Colors.indigo,
-      Colors.pink,
-      Colors.cyan,
-      Colors.amber,
-    ];
+    final colors = AppTheme.symbolColors;
     return colors[hash.abs() % colors.length];
   }
 }
