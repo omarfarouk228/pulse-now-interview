@@ -6,16 +6,14 @@ class PortfolioSummary {
   final double totalValue;
   final double totalPnl;
   final double totalPnlPercent;
-  final double totalInvested;
-  final int holdingsCount;
+  final int totalHoldings;
   final DateTime? lastUpdated;
 
   const PortfolioSummary({
     required this.totalValue,
     required this.totalPnl,
     required this.totalPnlPercent,
-    this.totalInvested = 0.0,
-    this.holdingsCount = 0,
+    this.totalHoldings = 0,
     this.lastUpdated,
   });
 
@@ -24,8 +22,7 @@ class PortfolioSummary {
       totalValue: _parseDouble(json['totalValue']),
       totalPnl: _parseDouble(json['totalPnl']),
       totalPnlPercent: _parseDouble(json['totalPnlPercent']),
-      totalInvested: _parseDouble(json['totalInvested']),
-      holdingsCount: _parseInt(json['holdingsCount']),
+      totalHoldings: _parseInt(json['totalHoldings']),
       lastUpdated: json['lastUpdated'] != null
           ? DateTime.tryParse(json['lastUpdated'] as String)
           : null,
@@ -37,8 +34,7 @@ class PortfolioSummary {
       'totalValue': totalValue,
       'totalPnl': totalPnl,
       'totalPnlPercent': totalPnlPercent,
-      'totalInvested': totalInvested,
-      'holdingsCount': holdingsCount,
+      'totalHoldings': totalHoldings,
       if (lastUpdated != null) 'lastUpdated': lastUpdated!.toIso8601String(),
     };
   }
@@ -84,7 +80,6 @@ class PortfolioSummary {
 class PortfolioHolding {
   final String id;
   final String symbol;
-  final String name;
   final double quantity;
   final double averagePrice;
   final double currentPrice;
@@ -92,11 +87,11 @@ class PortfolioHolding {
   final double pnl;
   final double pnlPercent;
   final double allocation;
+  final DateTime? lastUpdated;
 
   const PortfolioHolding({
     required this.id,
     required this.symbol,
-    this.name = '',
     required this.quantity,
     required this.averagePrice,
     required this.currentPrice,
@@ -104,13 +99,13 @@ class PortfolioHolding {
     required this.pnl,
     required this.pnlPercent,
     this.allocation = 0.0,
+    this.lastUpdated,
   });
 
   factory PortfolioHolding.fromJson(Map<String, dynamic> json) {
     return PortfolioHolding(
       id: json['id'] as String? ?? '',
       symbol: json['symbol'] as String? ?? '',
-      name: json['name'] as String? ?? '',
       quantity: _parseDouble(json['quantity']),
       averagePrice: _parseDouble(json['averagePrice']),
       currentPrice: _parseDouble(json['currentPrice']),
@@ -118,6 +113,9 @@ class PortfolioHolding {
       pnl: _parseDouble(json['pnl']),
       pnlPercent: _parseDouble(json['pnlPercent']),
       allocation: _parseDouble(json['allocation']),
+      lastUpdated: json['lastUpdated'] != null
+          ? DateTime.tryParse(json['lastUpdated'] as String)
+          : null,
     );
   }
 
@@ -125,7 +123,6 @@ class PortfolioHolding {
     return {
       'id': id,
       'symbol': symbol,
-      'name': name,
       'quantity': quantity,
       'averagePrice': averagePrice,
       'currentPrice': currentPrice,
@@ -133,6 +130,7 @@ class PortfolioHolding {
       'pnl': pnl,
       'pnlPercent': pnlPercent,
       'allocation': allocation,
+      if (lastUpdated != null) 'lastUpdated': lastUpdated!.toIso8601String(),
     };
   }
 
@@ -168,56 +166,91 @@ class PortfolioHolding {
 @immutable
 class PortfolioPerformance {
   final String timeframe;
-  final double startValue;
-  final double endValue;
-  final double absoluteChange;
-  final double percentChange;
-  final double highValue;
-  final double lowValue;
   final List<PerformanceDataPoint> dataPoints;
+  final PerformanceSummary summary;
 
   const PortfolioPerformance({
     required this.timeframe,
-    required this.startValue,
-    required this.endValue,
-    required this.absoluteChange,
-    required this.percentChange,
-    this.highValue = 0.0,
-    this.lowValue = 0.0,
     this.dataPoints = const [],
+    this.summary = const PerformanceSummary(),
   });
 
   factory PortfolioPerformance.fromJson(Map<String, dynamic> json) {
-    final dataPointsList = json['dataPoints'] as List<dynamic>? ?? [];
+    final dataList = json['data'] as List<dynamic>? ?? [];
 
     return PortfolioPerformance(
       timeframe: json['timeframe'] as String? ?? '',
-      startValue: _parseDouble(json['startValue']),
-      endValue: _parseDouble(json['endValue']),
-      absoluteChange: _parseDouble(json['absoluteChange']),
-      percentChange: _parseDouble(json['percentChange']),
-      highValue: _parseDouble(json['highValue']),
-      lowValue: _parseDouble(json['lowValue']),
-      dataPoints: dataPointsList
+      dataPoints: dataList
           .map((e) => PerformanceDataPoint.fromJson(e as Map<String, dynamic>))
           .toList(),
+      summary: json['summary'] != null
+          ? PerformanceSummary.fromJson(json['summary'] as Map<String, dynamic>)
+          : const PerformanceSummary(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'timeframe': timeframe,
-      'startValue': startValue,
-      'endValue': endValue,
-      'absoluteChange': absoluteChange,
-      'percentChange': percentChange,
-      'highValue': highValue,
-      'lowValue': lowValue,
-      'dataPoints': dataPoints.map((e) => e.toJson()).toList(),
+      'data': dataPoints.map((e) => e.toJson()).toList(),
+      'summary': summary.toJson(),
     };
   }
 
-  bool get isPositive => percentChange >= 0;
+  bool get isPositive => summary.totalReturn >= 0;
+  bool get hasData => dataPoints.isNotEmpty;
+
+  // Convenience getters
+  double get startValue => summary.startValue;
+  double get endValue => summary.endValue;
+  double get totalReturn => summary.totalReturn;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PortfolioPerformance && other.timeframe == timeframe;
+  }
+
+  @override
+  int get hashCode => timeframe.hashCode;
+}
+
+/// Model representing a single data point in performance history.
+@immutable
+class PerformanceDataPoint {
+  final DateTime timestamp;
+  final double value;
+  final double pnl;
+  final double pnlPercent;
+
+  const PerformanceDataPoint({
+    required this.timestamp,
+    required this.value,
+    this.pnl = 0.0,
+    this.pnlPercent = 0.0,
+  });
+
+  factory PerformanceDataPoint.fromJson(Map<String, dynamic> json) {
+    return PerformanceDataPoint(
+      timestamp:
+          DateTime.tryParse(json['timestamp'] as String? ?? '') ??
+          DateTime.now(),
+      value: _parseDouble(json['value']),
+      pnl: _parseDouble(json['pnl']),
+      pnlPercent: _parseDouble(json['pnlPercent']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'timestamp': timestamp.toIso8601String(),
+      'value': value,
+      'pnl': pnl,
+      'pnlPercent': pnlPercent,
+    };
+  }
+
+  bool get isProfitable => pnl >= 0;
 
   static double _parseDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -226,39 +259,40 @@ class PortfolioPerformance {
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is PortfolioPerformance &&
-        other.timeframe == timeframe &&
-        other.endValue == endValue;
-  }
-
-  @override
-  int get hashCode => Object.hash(timeframe, endValue);
 }
 
-/// Model representing a single data point in performance history.
+/// Model representing performance summary statistics.
 @immutable
-class PerformanceDataPoint {
-  final DateTime timestamp;
-  final double value;
+class PerformanceSummary {
+  final double startValue;
+  final double endValue;
+  final double totalReturn;
 
-  const PerformanceDataPoint({required this.timestamp, required this.value});
+  const PerformanceSummary({
+    this.startValue = 0.0,
+    this.endValue = 0.0,
+    this.totalReturn = 0.0,
+  });
 
-  factory PerformanceDataPoint.fromJson(Map<String, dynamic> json) {
-    return PerformanceDataPoint(
-      timestamp:
-          DateTime.tryParse(json['timestamp'] as String? ?? '') ??
-          DateTime.now(),
-      value: _parseDouble(json['value']),
+  factory PerformanceSummary.fromJson(Map<String, dynamic> json) {
+    return PerformanceSummary(
+      startValue: _parseDouble(json['startValue']),
+      endValue: _parseDouble(json['endValue']),
+      totalReturn: _parseDouble(json['totalReturn']),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'timestamp': timestamp.toIso8601String(), 'value': value};
+    return {
+      'startValue': startValue,
+      'endValue': endValue,
+      'totalReturn': totalReturn,
+    };
   }
+
+  bool get isPositive => totalReturn >= 0;
+
+  double get absoluteChange => endValue - startValue;
 
   static double _parseDouble(dynamic value) {
     if (value == null) return 0.0;

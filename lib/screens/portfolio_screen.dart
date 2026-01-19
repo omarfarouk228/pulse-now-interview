@@ -239,46 +239,175 @@ class _PerformanceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPositive = performance.isPositive;
+    final changeColor = Color(
+      isPositive ? AppConstants.positiveColor : AppConstants.negativeColor,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Performance',
+          'Performance (${performance.timeframe})',
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _PerformanceCard(
-                title: 'Return',
-                value: '${performance.percentChange.toStringAsFixed(2)}%',
-                isPositive: performance.isPositive,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _PerformanceCard(
+                      title: 'Return',
+                      value:
+                          '${isPositive ? '+' : ''}${performance.totalReturn.toStringAsFixed(2)}%',
+                      isPositive: isPositive,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PerformanceCard(
+                      title: 'Start',
+                      value: _formatCurrency(performance.startValue),
+                      isPositive: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PerformanceCard(
+                      title: 'Current',
+                      value: _formatCurrency(performance.endValue),
+                      isPositive: isPositive,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _PerformanceCard(
-                title: 'High',
-                value: '\$${performance.highValue.toStringAsFixed(2)}',
-                isPositive: true,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _PerformanceCard(
-                title: 'Low',
-                value: '\$${performance.lowValue.toStringAsFixed(2)}',
-                isPositive: false,
-              ),
-            ),
-          ],
+              if (performance.hasData) ...[
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                _PerformanceChart(
+                  dataPoints: performance.dataPoints,
+                  changeColor: changeColor,
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
   }
+
+  String _formatCurrency(double value) {
+    if (value >= 1000000) {
+      return '\$${(value / 1000000).toStringAsFixed(2)}M';
+    } else if (value >= 1000) {
+      return '\$${(value / 1000).toStringAsFixed(1)}K';
+    }
+    return '\$${value.toStringAsFixed(2)}';
+  }
+}
+
+class _PerformanceChart extends StatelessWidget {
+  final List<PerformanceDataPoint> dataPoints;
+  final Color changeColor;
+
+  const _PerformanceChart({
+    required this.dataPoints,
+    required this.changeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (dataPoints.isEmpty) return const SizedBox.shrink();
+
+    final values = dataPoints.map((e) => e.value).toList();
+    final minValue = values.reduce((a, b) => a < b ? a : b);
+    final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final range = maxValue - minValue;
+
+    return SizedBox(
+      height: 80,
+      child: CustomPaint(
+        size: const Size(double.infinity, 80),
+        painter: _ChartPainter(
+          values: values,
+          minValue: minValue,
+          range: range == 0 ? 1 : range,
+          lineColor: changeColor,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartPainter extends CustomPainter {
+  final List<double> values;
+  final double minValue;
+  final double range;
+  final Color lineColor;
+
+  _ChartPainter({
+    required this.values,
+    required this.minValue,
+    required this.range,
+    required this.lineColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          lineColor.withValues(alpha: 0.3),
+          lineColor.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final path = Path();
+    final fillPath = Path();
+
+    for (var i = 0; i < values.length; i++) {
+      final x = (i / (values.length - 1)) * size.width;
+      final y = size.height - ((values[i] - minValue) / range) * size.height;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _PerformanceCard extends StatelessWidget {
