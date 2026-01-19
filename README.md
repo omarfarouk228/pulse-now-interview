@@ -4,17 +4,13 @@ A Flutter application for tracking crypto markets with real-time data, analytics
 
 ## Screenshots
 
-<!-- Add your screenshots here -->
-
 | Markets Screen                      | Market Detail                     | Analytics                               | Portfolio                               |
 | ----------------------------------- | --------------------------------- | --------------------------------------- | --------------------------------------- |
 | ![Markets](screenshots/markets.png) | ![Detail](screenshots/detail.png) | ![Analytics](screenshots/analytics.png) | ![Portfolio](screenshots/portfolio.png) |
 
-| Search & Filter                   | Dark Mode                          | Loading State                       | Error State                     |
-| --------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------- |
-| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Loading](screenshots/loading.png) | ![Error](screenshots/error.png) |
-
-> **Note:** Create a `screenshots/` folder and add your app screenshots with the names referenced above.
+| Search & Filter                   | Dark Mode                          | Error State                     |
+| --------------------------------- | ---------------------------------- | ------------------------------- |
+| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Error](screenshots/error.png) |
 
 ## Features Implemented
 
@@ -51,27 +47,19 @@ A Flutter application for tracking crypto markets with real-time data, analytics
 ```
 lib/
 ├── main.dart                 # Entry point, MultiProvider setup
-├── models/
-│   └── market_data_model.dart    # Immutable data model
-├── providers/
-│   ├── market_data_provider.dart # Market data state
-│   ├── analytics_provider.dart   # Analytics state
-│   ├── portfolio_provider.dart   # Portfolio state
-│   └── theme_provider.dart       # Theme management
-├── screens/
-│   ├── home_screen.dart          # Home screen
-│   ├── market_data_screen.dart   # Markets list
-│   ├── market_detail_screen.dart # Market detail view
-│   ├── analytics_screen.dart     # Analytics dashboard
-│   └── portfolio_screen.dart     # Portfolio management
-├── services/
-│   ├── api_service.dart          # REST API client
-│   └── websocket_service.dart    # Real-time WebSocket service
-├── router/
-│   ├── app_router.dart           # Route definitions
-│   └── main_shell.dart           # Bottom navigation shell
-└── utils/
-    └── constants.dart            # App-wide constants
+├── models/                   # Data models (e.g., MarketData)
+├── providers/                # State management (ChangeNotifier)
+├── router/                   # Navigation and routing
+├── screens/                  # Top-level UI for each route
+├── services/                 # API and WebSocket communication
+├── utils/                    # Constants and utility functions
+└── widgets/                  # Reusable UI components
+    ├── common/               # Widgets shared across multiple screens
+    ├── analytics/            # Widgets specific to the Analytics screen
+    ├── home/                 # Widgets specific to the Home screen
+    ├── market_data/          # Widgets specific to the Market Data screen
+    ├── market_detail/        # Widgets specific to the Market Detail screen
+    └── portfolio/            # Widgets specific to the Portfolio screen
 ```
 
 ## Tech Stack
@@ -174,6 +162,11 @@ flutter test test/models/market_data_model_test.dart
 - HTTP status code specific messages
 - Network error detection
 
+### 5. Component-Based UI
+
+- UI is broken down into small, reusable widgets organized by feature.
+- Common widgets (`AreaChart`, `CryptoIcon`, `ErrorView`) are shared across the app to ensure consistency and reduce code duplication.
+
 ## API Endpoints Used
 
 | Method | Endpoint                           | Description             |
@@ -188,18 +181,6 @@ flutter test test/models/market_data_model_test.dart
 | GET    | `/api/portfolio/holdings`          | Get holdings list       |
 | GET    | `/api/portfolio/performance`       | Get performance metrics |
 | WS     | `ws://localhost:3000`              | Real-time updates       |
-
-## Commit History
-
-The project follows Conventional Commits:
-
-```
-feat(websocket): implement real-time market updates via WebSocket
-feat(screens): add search and sort functionality to HomeScreen
-feat(screens): add MarketDetailScreen with navigation
-test: add comprehensive unit and widget tests
-chore: update Android config and API settings for device testing
-```
 
 ## Author
 

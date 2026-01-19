@@ -8,6 +8,14 @@ This document details the technical architecture of the PulseNow application to 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Flutter App                              │
 ├─────────────────────────────────────────────────────────────────┤
+│                 ┌──────────────────┐                             │
+│                 │      Router      │                             │
+│                 │  (AppRouter /    │                             │
+│                 │   MainShell)     │                             │
+│                 └────────┬─────────┘                             │
+│          ┌───────────────┼───────────────┐                       │
+│          │               │               │                       │
+│          ▼               ▼               ▼                       │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
 │  │   Screens   │  │   Screens   │  │   Screens   │             │
 │  │  (Markets)  │  │ (Analytics) │  │ (Portfolio) │             │
@@ -48,53 +56,45 @@ This document details the technical architecture of the PulseNow application to 
 
 ## Application Layers
 
-### 1. Presentation Layer (Screens)
+### 1. Presentation Layer (Screens & Widgets)
 
-Screens are `StatelessWidget` or `StatefulWidget` that consume data via `Consumer<Provider>`.
+The presentation layer is composed of **Screens** and **Widgets**.
 
-#### MarketDataScreen
+#### Screens
+
+Screens are top-level widgets, each corresponding to a specific route (e.g., `MarketDataScreen`). Their primary role is to structure the page and compose different widgets. They are also responsible for interacting with the `Providers` to fetch data and manage high-level state.
 
 ```dart
-// Responsibilities:
-// - Display market list
-// - Handle search and sorting
-// - Navigate to detail view
-
-Consumer<MarketDataProvider>(
+// Example: analytics_screen.dart
+Consumer<AnalyticsProvider>(
   builder: (context, provider, child) {
-    if (provider.isLoading) return LoadingWidget();
-    if (provider.hasError) return ErrorWidget(onRetry: provider.loadMarketData);
-    return ListView.builder(...);
+    // ... state checking (loading, error)
+    return RefreshIndicator(
+      onRefresh: () => provider.refresh(),
+      child: SingleChildScrollView(
+        // ... layout
+        child: Column(
+          children: [
+            // Composition of widgets
+            OverviewSection(overview: provider.overview!),
+            TrendsSection(trends: provider.trends!),
+            SentimentSection(sentiment: provider.sentiment!),
+          ],
+        ),
+      ),
+    );
   },
-)
+);
 ```
 
-#### MarketDetailScreen
+#### Widgets
 
-```dart
-// Responsibilities:
-// - Display market details
-// - Receive real-time updates
-// - Show price history
-```
+The `lib/widgets/` directory contains all reusable UI components. This approach keeps the screen files clean and focused on layout, while the widgets handle the details of rendering specific pieces of UI.
 
-#### AnalyticsScreen
+- **`widgets/common/`**: Contains widgets shared across multiple features, such as `AreaChart`, `CryptoIcon`, `ErrorView`, and `LoadingView`.
+- **`widgets/<feature>/`**: Contains widgets specific to a single screen (e.g., `widgets/analytics/OverviewSection.dart`).
 
-```dart
-// Responsibilities:
-// - Dashboard with market overview
-// - Market trends with timeframe selection
-// - Market sentiment analysis
-```
-
-#### PortfolioScreen
-
-```dart
-// Responsibilities:
-// - Portfolio summary (total value, P&L)
-// - Holdings list
-// - Performance metrics
-```
+This component-based architecture promotes reusability, simplifies testing, and makes the codebase easier to maintain.
 
 ### 2. State Layer (Providers)
 
@@ -453,15 +453,20 @@ void main() {
 - Models: Data structure
 - Services: External communication
 - Providers: Business logic and state
-- Screens: UI presentation
+- Screens: UI composition and layout
 
-### 4. Dependency Injection
+### 4. Componentization & Reusability
+
+- The UI is broken down into small, single-purpose widgets organized by feature in the `lib/widgets` directory.
+- Common widgets (`AreaChart`, `CryptoIcon`) are shared across the app to ensure consistency and reduce code duplication.
+
+### 5. Dependency Injection
 
 - Injectable services via constructor
 - Facilitates testing with mocks
 - Component decoupling
 
-### 5. Resource Management
+### 6. Resource Management
 
 - `dispose()` on all controllers
 - Subscription cancellation
