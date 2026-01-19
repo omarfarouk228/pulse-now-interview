@@ -4,13 +4,17 @@ A Flutter application for tracking crypto markets with real-time data, analytics
 
 ## Screenshots
 
+<!-- Add your screenshots here -->
+
 | Markets Screen                      | Market Detail                     | Analytics                               | Portfolio                               |
 | ----------------------------------- | --------------------------------- | --------------------------------------- | --------------------------------------- |
 | ![Markets](screenshots/markets.png) | ![Detail](screenshots/detail.png) | ![Analytics](screenshots/analytics.png) | ![Portfolio](screenshots/portfolio.png) |
 
-| Search & Filter                   | Dark Mode                          | Error State                     |
-| --------------------------------- | ---------------------------------- | ------------------------------- |
-| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Error](screenshots/error.png) |
+| Search & Filter                   | Dark Mode                          | Loading State                       | Error State                     |
+| --------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------- |
+| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Loading](screenshots/loading.png) | ![Error](screenshots/error.png) |
+
+> **Note:** Create a `screenshots/` folder and add your app screenshots with the names referenced above.
 
 ## Features Implemented
 
@@ -41,6 +45,13 @@ A Flutter application for tracking crypto markets with real-time data, analytics
 | Unit tests            | Done   | API, Provider and Model tests          |
 | Dark Mode             | Done   | Light/dark theme support               |
 | Error handling        | Done   | Custom `ApiException` with HTTP codes  |
+
+### Extra Implemented
+
+| Feature                  | Status | Details                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Analytics Dashboard**  | Done   | A dedicated screen providing in-depth market analysis, including: <ul><li>**Market Overview:** High-level stats like total market cap, volume, and BTC dominance.</li><li>**Trend Analysis:** Visual representation of market trends with selectable timeframes.</li><li>**Sentiment Analysis:** A comprehensive gauge showing market sentiment based on multiple indicators.</li></ul>                   |
+| **Portfolio Management** | Done   | A dedicated screen for tracking a user's asset portfolio, including: <ul><li>**Aggregated View:** A summary card showing total portfolio value and overall profit/loss.</li><li>**Performance Tracking:** A chart and stats showing portfolio performance over various timeframes.</li><li>**Detailed Holdings:** A list of all assets in the portfolio with their quantity and individual P&L.</li></ul> |
 
 ## Project Architecture
 
@@ -181,6 +192,18 @@ flutter test test/models/market_data_model_test.dart
 | GET    | `/api/portfolio/holdings`          | Get holdings list       |
 | GET    | `/api/portfolio/performance`       | Get performance metrics |
 | WS     | `ws://localhost:3000`              | Real-time updates       |
+
+## Commit History
+
+The project follows Conventional Commits:
+
+```
+feat(websocket): implement real-time market updates via WebSocket
+feat(screens): add search and sort functionality to HomeScreen
+feat(screens): add MarketDetailScreen with navigation
+test: add comprehensive unit and widget tests
+chore: update Android config and API settings for device testing
+```
 
 ## Author
 
