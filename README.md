@@ -4,17 +4,13 @@ A Flutter application for tracking crypto markets with real-time data, analytics
 
 ## Screenshots
 
-<!-- Add your screenshots here -->
-
 | Markets Screen                      | Market Detail                     | Analytics                               | Portfolio                               |
 | ----------------------------------- | --------------------------------- | --------------------------------------- | --------------------------------------- |
 | ![Markets](screenshots/markets.png) | ![Detail](screenshots/detail.png) | ![Analytics](screenshots/analytics.png) | ![Portfolio](screenshots/portfolio.png) |
 
-| Search & Filter                   | Dark Mode                          | Loading State                       | Error State                     |
-| --------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------- |
-| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Loading](screenshots/loading.png) | ![Error](screenshots/error.png) |
-
-> **Note:** Create a `screenshots/` folder and add your app screenshots with the names referenced above.
+| Search & Filter                   | Dark Mode                          | Error State                     |
+| --------------------------------- | ---------------------------------- | ------------------------------- |
+| ![Search](screenshots/search.png) | ![Dark](screenshots/dark_mode.png) | ![Error](screenshots/error.png) |
 
 ## Features Implemented
 
@@ -193,17 +189,6 @@ flutter test test/models/market_data_model_test.dart
 | GET    | `/api/portfolio/performance`       | Get performance metrics |
 | WS     | `ws://localhost:3000`              | Real-time updates       |
 
-## Commit History
-
-The project follows Conventional Commits:
-
-```
-feat(websocket): implement real-time market updates via WebSocket
-feat(screens): add search and sort functionality to HomeScreen
-feat(screens): add MarketDetailScreen with navigation
-test: add comprehensive unit and widget tests
-chore: update Android config and API settings for device testing
-```
 
 ## Author
 
