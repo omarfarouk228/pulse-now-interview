@@ -10,6 +10,7 @@ class AppConstants {
   // static const String baseUrl = 'http://10.0.2.2:3000/api';
   // static const String wsUrl = 'ws://10.0.2.2:3000';
 
+  // For local network testing, use your machine's local IP address
   static const String baseUrl = 'http://192.168.0.102:3000/api';
   static const String wsUrl = 'ws://192.168.0.102:3000';
 
