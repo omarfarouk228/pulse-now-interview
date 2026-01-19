@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:pulsenow_flutter/themes/app_theme.dart';
+import '../models/portfolio_model.dart';
 import '../providers/portfolio_provider.dart';
 import '../utils/constants.dart';
 
@@ -233,7 +233,7 @@ class _TimeframeSelector extends StatelessWidget {
 }
 
 class _PerformanceSection extends StatelessWidget {
-  final Map<String, dynamic> performance;
+  final PortfolioPerformance performance;
 
   const _PerformanceSection({required this.performance});
 
@@ -254,26 +254,23 @@ class _PerformanceSection extends StatelessWidget {
             Expanded(
               child: _PerformanceCard(
                 title: 'Return',
-                value:
-                    '${(performance['return'] as num?)?.toStringAsFixed(2) ?? '0.00'}%',
-                isPositive: ((performance['return'] as num?) ?? 0) >= 0,
+                value: '${performance.percentChange.toStringAsFixed(2)}%',
+                isPositive: performance.isPositive,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _PerformanceCard(
-                title: 'Best Day',
-                value:
-                    '${(performance['bestDay'] as num?)?.toStringAsFixed(2) ?? '0.00'}%',
+                title: 'High',
+                value: '\$${performance.highValue.toStringAsFixed(2)}',
                 isPositive: true,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _PerformanceCard(
-                title: 'Worst Day',
-                value:
-                    '${(performance['worstDay'] as num?)?.toStringAsFixed(2) ?? '0.00'}%',
+                title: 'Low',
+                value: '\$${performance.lowValue.toStringAsFixed(2)}',
                 isPositive: false,
               ),
             ),
@@ -327,7 +324,7 @@ class _PerformanceCard extends StatelessWidget {
 }
 
 class _HoldingsSection extends StatelessWidget {
-  final List<Map<String, dynamic>> holdings;
+  final List<PortfolioHolding> holdings;
 
   const _HoldingsSection({required this.holdings});
 
@@ -377,19 +374,13 @@ class _HoldingsSection extends StatelessWidget {
 }
 
 class _HoldingItem extends StatelessWidget {
-  final Map<String, dynamic> holding;
+  final PortfolioHolding holding;
 
   const _HoldingItem({required this.holding});
 
   @override
   Widget build(BuildContext context) {
-    final symbol = holding['symbol'] ?? '';
-    final amount = (holding['amount'] as num?)?.toDouble() ?? 0.0;
-    final value = (holding['value'] as num?)?.toDouble() ?? 0.0;
-    final profitLoss = (holding['profitLoss'] as num?)?.toDouble() ?? 0.0;
-    final profitLossPercent =
-        (holding['profitLossPercent'] as num?)?.toDouble() ?? 0.0;
-    final isPositive = profitLoss >= 0;
+    final isPositive = holding.isProfitable;
     final changeColor = Color(
       isPositive ? AppConstants.positiveColor : AppConstants.negativeColor,
     );
@@ -403,21 +394,21 @@ class _HoldingItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _CryptoIcon(symbol: symbol),
+          _CryptoIcon(symbol: holding.symbol),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  symbol,
+                  holding.symbol,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
                 Text(
-                  '${amount.toStringAsFixed(6)} units',
+                  '${holding.quantity.toStringAsFixed(6)} units',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
@@ -427,7 +418,7 @@ class _HoldingItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '\$${value.toStringAsFixed(2)}',
+                '\$${holding.value.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -440,7 +431,7 @@ class _HoldingItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '${isPositive ? '+' : ''}${profitLossPercent.toStringAsFixed(2)}%',
+                  '${isPositive ? '+' : ''}${holding.pnlPercent.toStringAsFixed(2)}%',
                   style: TextStyle(
                     color: changeColor,
                     fontWeight: FontWeight.w600,
@@ -485,7 +476,16 @@ class _CryptoIcon extends StatelessWidget {
 
   Color _getColorForSymbol(String symbol) {
     final hash = symbol.hashCode;
-    final colors = AppTheme.symbolColors;
+    final colors = [
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.indigo,
+      Colors.pink,
+      Colors.cyan,
+      Colors.amber,
+    ];
     return colors[hash.abs() % colors.length];
   }
 }

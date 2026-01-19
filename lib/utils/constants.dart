@@ -10,8 +10,8 @@ class AppConstants {
   // static const String baseUrl = 'http://10.0.2.2:3000/api';
   // static const String wsUrl = 'ws://10.0.2.2:3000';
 
-  static const String baseUrl = 'http://192.168.1.102:3000/api';
-  static const String wsUrl = 'ws://192.168.1.102:3000';
+  static const String baseUrl = 'http://192.168.0.102:3000/api';
+  static const String wsUrl = 'ws://192.168.0.102:3000';
 
   // API Endpoints
   static const String marketDataEndpoint = '/market-data';

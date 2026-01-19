@@ -1,19 +1,20 @@
 import 'package:flutter/foundation.dart';
+import '../models/analytics_model.dart';
 import '../services/api_service.dart';
 
 class AnalyticsProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  Map<String, dynamic>? _overview;
-  Map<String, dynamic>? _trends;
-  Map<String, dynamic>? _sentiment;
+  AnalyticsOverview? _overview;
+  MarketTrends? _trends;
+  MarketSentiment? _sentiment;
   bool _isLoading = false;
   String? _error;
   String _selectedTimeframe = '24h';
 
-  Map<String, dynamic>? get overview => _overview;
-  Map<String, dynamic>? get trends => _trends;
-  Map<String, dynamic>? get sentiment => _sentiment;
+  AnalyticsOverview? get overview => _overview;
+  MarketTrends? get trends => _trends;
+  MarketSentiment? get sentiment => _sentiment;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get selectedTimeframe => _selectedTimeframe;
@@ -43,7 +44,8 @@ class AnalyticsProvider with ChangeNotifier {
 
   Future<void> loadOverview() async {
     try {
-      _overview = await _apiService.getAnalyticsOverview();
+      final data = await _apiService.getAnalyticsOverview();
+      _overview = AnalyticsOverview.fromJson(data);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -54,7 +56,8 @@ class AnalyticsProvider with ChangeNotifier {
   Future<void> loadTrends(String timeframe) async {
     _selectedTimeframe = timeframe;
     try {
-      _trends = await _apiService.getMarketTrends(timeframe: timeframe);
+      final data = await _apiService.getMarketTrends(timeframe: timeframe);
+      _trends = MarketTrends.fromJson(data);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -64,7 +67,8 @@ class AnalyticsProvider with ChangeNotifier {
 
   Future<void> loadSentiment() async {
     try {
-      _sentiment = await _apiService.getMarketSentiment();
+      final data = await _apiService.getMarketSentiment();
+      _sentiment = MarketSentiment.fromJson(data);
       notifyListeners();
     } catch (e) {
       _error = e.toString();

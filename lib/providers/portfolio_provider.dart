@@ -1,19 +1,20 @@
 import 'package:flutter/foundation.dart';
+import '../models/portfolio_model.dart';
 import '../services/api_service.dart';
 
 class PortfolioProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  Map<String, dynamic>? _summary;
-  List<Map<String, dynamic>> _holdings = [];
-  Map<String, dynamic>? _performance;
+  PortfolioSummary? _summary;
+  List<PortfolioHolding> _holdings = [];
+  PortfolioPerformance? _performance;
   bool _isLoading = false;
   String? _error;
   String _selectedTimeframe = '7d';
 
-  Map<String, dynamic>? get summary => _summary;
-  List<Map<String, dynamic>> get holdings => _holdings;
-  Map<String, dynamic>? get performance => _performance;
+  PortfolioSummary? get summary => _summary;
+  List<PortfolioHolding> get holdings => _holdings;
+  PortfolioPerformance? get performance => _performance;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get selectedTimeframe => _selectedTimeframe;
@@ -21,27 +22,9 @@ class PortfolioProvider with ChangeNotifier {
   bool get hasData => _summary != null || _holdings.isNotEmpty;
   bool get hasError => _error != null;
 
-  double get totalValue {
-    if (_summary == null) return 0.0;
-    return _parseDouble(_summary!['totalValue']);
-  }
-
-  double get totalProfitLoss {
-    if (_summary == null) return 0.0;
-    return _parseDouble(_summary!['totalPnl']);
-  }
-
-  double get totalProfitLossPercent {
-    if (_summary == null) return 0.0;
-    return _parseDouble(_summary!['totalPnlPercent']);
-  }
-
-  double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
+  double get totalValue => _summary?.totalValue ?? 0.0;
+  double get totalProfitLoss => _summary?.totalPnl ?? 0.0;
+  double get totalProfitLossPercent => _summary?.totalPnlPercent ?? 0.0;
 
   Future<void> loadAllPortfolioData() async {
     _isLoading = true;
@@ -64,7 +47,8 @@ class PortfolioProvider with ChangeNotifier {
 
   Future<void> loadPortfolioSummary() async {
     try {
-      _summary = await _apiService.getPortfolio();
+      final data = await _apiService.getPortfolio();
+      _summary = PortfolioSummary.fromJson(data);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -74,7 +58,8 @@ class PortfolioProvider with ChangeNotifier {
 
   Future<void> loadHoldings() async {
     try {
-      _holdings = await _apiService.getPortfolioHoldings();
+      final data = await _apiService.getPortfolioHoldings();
+      _holdings = data.map((e) => PortfolioHolding.fromJson(e)).toList();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -85,9 +70,10 @@ class PortfolioProvider with ChangeNotifier {
   Future<void> loadPerformance(String timeframe) async {
     _selectedTimeframe = timeframe;
     try {
-      _performance = await _apiService.getPortfolioPerformance(
+      final data = await _apiService.getPortfolioPerformance(
         timeframe: timeframe,
       );
+      _performance = PortfolioPerformance.fromJson(data);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
